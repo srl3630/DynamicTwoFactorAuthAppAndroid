@@ -37,11 +37,11 @@ def index():
 def onefactor():
     data = (json.loads(request.data))
     m = hashlib.sha256()
-    m.update('adasda0'.encode(encoding = 'UTF-8',errors = 'strict'))
-    mhex = m.hexdigest()
-    print(data['otp'])
-    print(mhex)
-    if data['username'] == 'user' and data['otp'] == mhex :
+    m.update('adasda0').hexdigest()
+    print(data['oauth'])
+    print(m)
+
+    if data['username'] == 'user' and data['oauth'] == m :
             data = {"oauth_token":"adasda"}
             response = app.response_class(
             response=json.dumps(data),
@@ -57,17 +57,7 @@ def onefactor():
         )
     return response
 
-@app.route('/validate')
-def valme():
-    print(request.args.get('oauth'))
-    data = {"user":"good"}
-    response = app.response_class(
-    response=json.dumps(data),
-    status=200,
-    mimetype='application/json',)
-    return response
 
-     
 
 @app.route('/')
 def about():
@@ -82,4 +72,4 @@ def twoauth():
 
 if __name__ == '__main__':
 	app.secret_key="ServeMeOutsideHowBoutFlask"
-app.run(host='0.0.0.0',port=80)
+app.run(host='0.0.0.0',port=8000)
