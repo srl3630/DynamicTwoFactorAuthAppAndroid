@@ -69,7 +69,7 @@ public class Main2Activity extends AppCompatActivity {
         dBhandler = new MyDBhandler(this,null,null,1);
 
 
-        JsonObjectRequest postRequest = new JsonObjectRequest("http://192.168.1.120/auth", jsonBody,new Response.Listener<JSONObject>()
+        JsonObjectRequest postRequest = new JsonObjectRequest("http://192.168.1.120/register", jsonBody,new Response.Listener<JSONObject>()
                 {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -78,7 +78,7 @@ public class Main2Activity extends AppCompatActivity {
                         String token = "";
                         String loginURL = url;
                         try {
-                            token = response.getString("token");
+                            token = response.getString("salt");
                         } catch (Exception e){
                             Log.e("error",e.toString());
                         }
