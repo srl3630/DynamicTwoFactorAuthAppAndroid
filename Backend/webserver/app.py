@@ -1,75 +1,76 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging, json
-import hashlib
+import hmac, hashlib
+import string
+import random
 
 app = Flask(__name__)
-class jresp:
-    def __init__(self, token):
-        self.token = token
-    def serialize(self):
-        return {
-            'token': self.token,
-        }
-    
- 
-@app.route('/auth',methods=['GET', 'POST'])
-def index():
-    print(request.data)
-    data = (json.loads(request.data))
-    print(data)
-    response = 0
-    if data['username'] == 'user' and data['password'] == 'pass' :
-        data = {"token":"adasda"}
-        response = app.response_class(
-            response=json.dumps(data),
-            status=200,
-            mimetype='application/json'
-        )
-    else:
-        data = {'error':'bad username or password'}
-        response = app.response_class(
-            response=json.dumps(data),
-            status=401,
-            mimetype='application/json'
-        )
-    return response
 
-@app.route('/login',methods=['GET', 'POST'])
-def onefactor():
-    data = (json.loads(request.data))
-    m = hashlib.sha256()
-    m.update('adasda0').hexdigest()
-    print(data['oauth'])
-    print(m)
+passwords = {
+    "alice": "pass",
+    "bob": "word"
+}
 
-    if data['username'] == 'user' and data['oauth'] == m :
-            data = {"oauth_token":"adasda"}
-            response = app.response_class(
-            response=json.dumps(data),
-            status=200,
-            mimetype='application/json'
-        )
-    else:
-        data = {'error':'bad username or password'}
-        response = app.response_class(
-            response=json.dumps(data),
-            status=401,
-            mimetype='application/json'
-        )
-    return response
+counters = {
 
+}
+
+tokens = {
+
+
+}
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    """
+    Handles the login process
+    """
+    if request.method == "POST":
+        username = request.form["username"]
+        otp = request.form["otp"]
+
+        if int(otp) == generate_otp(username):  # validate otp
+            counters[username][0] += 1  # increment counter
+            # generate and store token
+            token = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
+            tokens[username] = token
+            data = {"oauth_token": token}
+        else:
+            data = {'error': 'bad username or token'}
+        return str(data)
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    """
+    handles the register process
+    """
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        if username in passwords.keys() and passwords[username] == password:  # validate passwords
+            salt = random.randint(0, 256)  # generate salt
+            data = {"salt": salt}
+            counters[username] = [0, salt]  # save salt and initialize counter
+            print(generate_otp(username))  # for debugging purposes
+        else:
+            data = {'error': 'bad username or password'}
+        return str(data)
+
+
+def generate_otp(username):
+    """
+    Generates an otp from the tables given a username
+    """
+    m = hmac.new(bytes([counters[username][1]]), digestmod=hashlib.sha256)
+    m.update(bytes([counters[username][0]]))
+    return int(m.hexdigest(), 16) % 1000000  # truncate it for debugging purposes
 
 
 @app.route('/')
 def about():
     return render_template('about.html')
 
-@app.route('/twoauth')
-def twoauth():
-    return render_template('twoauth.html')
 
-
-
-
-if __name__ == '__main__':
-	app.secret_key="ServeMeOutsideHowBoutFlask"
-app.run(host='0.0.0.0',port=8000)
+app.run(host='localhost',port=8080)
